@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+tar -zxf coffeaenv.tar.gz
+source coffeaenv/bin/activate
+
+echo "Running command:" $@
+timeout 4h $@ || exit $?

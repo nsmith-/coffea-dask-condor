@@ -1,0 +1,15 @@
+universe = vanilla
+
+Name = dask-scheduler
+Executable = wrap
+Arguments = "dask-scheduler"
+
+Output = logs/$(Name).out
+Error = logs/$(Name).err
+Log = logs/$(Name).log
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = coffeaenv.tar.gz
+x509userproxy = $ENV(X509_USER_PROXY)
+
+queue 1
