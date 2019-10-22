@@ -3,9 +3,15 @@ universe = vanilla
 Name = dask-worker
 Executable = wrap
 
-request_cpus = 4 
-request_memory = 8000
-Arguments = "dask-worker --nprocs 4 --nthreads 2 --memory-limit 2G $ENV(DASK_SCHEDULER)"
+GetEnv               = false
++RequiresCVMFS       = True
++IsFastQueueJob      = True
+request_disk         = 2048000
+Requirements         = TARGET.Arch == "X86_64" && (TARGET.OSG_major =!= undefined || TARGET.IS_GLIDEIN=?=true) && IsSlowSlot=!=true && (TARGET.HasParrotCVMFS=?=true || (TARGET.UWCMS_CVMFS_Exists && TARGET.CMS_CVMFS_Exists))
+
+request_cpus = 1
+request_memory = 2000
+Arguments = "dask-worker --nprocs 1 --nthreads 2 --memory-limit 2G $ENV(DASK_SCHEDULER)"
 
 Output = logs/$(Name)-$(Process).out
 Error = logs/$(Name)-$(Process).err
@@ -15,4 +21,4 @@ when_to_transfer_output = ON_EXIT
 transfer_input_files = coffeaenv.tar.gz
 x509userproxy = $ENV(X509_USER_PROXY)
 
-queue 4
+queue 20
