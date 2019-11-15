@@ -9,7 +9,8 @@ GetEnv               = false
 +IsFastQueueJob      = True
 request_memory       = 1000
 request_disk         = 2048000
-Requirements         = TARGET.Arch == "X86_64" && (TARGET.OSG_major =!= undefined || TARGET.IS_GLIDEIN=?=true) && IsSlowSlot=!=true && (TARGET.HasParrotCVMFS=?=true || (TARGET.UWCMS_CVMFS_Exists && TARGET.CMS_CVMFS_Exists))
+# Requirements         = TARGET.Arch == "X86_64" && (TARGET.OSG_major =!= undefined || TARGET.IS_GLIDEIN=?=true) && IsSlowSlot=!=true && (TARGET.HasParrotCVMFS=?=true || (TARGET.UWCMS_CVMFS_Exists && TARGET.CMS_CVMFS_Exists))
+Requirements = regexp("g3.*hep\.wisc\.edu", Machine, "i")
 
 Output = logs/$(Name).out
 Error = logs/$(Name).err
