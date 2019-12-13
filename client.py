@@ -1,7 +1,30 @@
-from dask.distributed import Client
+#!/usr/bin/env python3
+from dask.distributed import Client, WorkerPlugin
 import os
+import time
 
+class UserProxyPlugin(WorkerPlugin):
+    def __init__(self, proxy_file=None):
+        '''
+        If proxy_file is None, look for it in default location
+        '''
+        file = os.environ.get('X509_USER_PROXY', '/tmp/x509up_u%d' % os.getuid())
+        self._proxy = open(file, 'rb').read()
+
+    def setup(self, worker):
+        self._location = os.path.join(worker.local_directory, 'userproxy')
+        with open(self._location, 'wb') as fout:
+            fout.write(self._proxy)
+        os.environ['X509_USER_PROXY'] = self._location
+
+    def teardown(self, worker):
+        os.remove(self._location)
+        del os.environ['X509_USER_PROXY']
+
+
+user_proxy = UserProxyPlugin()
 client = Client(os.environ['DASK_SCHEDULER'])
+client.register_worker_plugin(user_proxy)
 
 from coffea import processor
 from coffea.processor.test_items import NanoTestProcessor
@@ -23,4 +46,18 @@ filelist = {
     ],
 }
 
-res = processor.run_uproot_job(filelist, 'Events', NanoTestProcessor(), processor.dask_executor, {'client': client, 'compression': 1, 'savemetrics': True})
+config = {
+    'client': client,
+    'compression': 1,
+    'savemetrics': True,
+}
+
+tic = time.time()
+res = processor.run_uproot_job(filelist, 'Events', NanoTestProcessor(), processor.dask_executor, config, chunksize=100000)
+toc = time.time()
+
+print("Dask client:", client)
+print("Events / s / thread:", res[1]['entries'].value / res[1]['processtime'].value)
+print("Bytes / s / thread:", res[1]['bytesread'].value / res[1]['processtime'].value)
+print("Events / s:", res[1]['entries'].value / (toc - tic))
+print("Bytes / s:", res[1]['bytesread'].value / (toc - tic))
