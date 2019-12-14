@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-from dask.distributed import Client, WorkerPlugin
+from dask.distributed import Client, WorkerPlugin, get_worker
 import os
+import sys
 import time
 
 class UserProxyPlugin(WorkerPlugin):
@@ -22,9 +23,23 @@ class UserProxyPlugin(WorkerPlugin):
         del os.environ['X509_USER_PROXY']
 
 
-user_proxy = UserProxyPlugin()
 client = Client(os.environ['DASK_SCHEDULER'])
-client.register_worker_plugin(user_proxy)
+
+if False:
+    client.restart()
+    client.upload_file('/home/ncsmith/coffea/dist/coffea-0.6.23.zip')
+    client.run(lambda: sys.path.insert(0, os.path.join(get_worker().local_directory, 'coffea-0.6.23.zip/coffea-0.6.23')))
+
+user_proxy = UserProxyPlugin()
+client.register_worker_plugin(user_proxy, 'user_proxy')
+def setxrootd():
+    os.environ['XRDCONNECTIONWINDOW'] = '10'
+    os.environ['XRDSTREAMTIMEOUT'] = '10'
+    os.environ['XRDTIMEOUTRESOLUTION'] = '2'
+    os.environ['XRDWORKERTHREADS'] = '4'
+    os.environ['XRDREQUESTTIMEOUT'] = '60'
+
+client.run(setxrootd)
 
 from coffea import processor
 from coffea.processor.test_items import NanoTestProcessor
@@ -51,13 +66,16 @@ config = {
     'compression': 1,
     'savemetrics': True,
 }
+chunksize = 80000
 
-tic = time.time()
-res = processor.run_uproot_job(filelist, 'Events', NanoTestProcessor(), processor.dask_executor, config, chunksize=100000)
-toc = time.time()
+if True:
+    tic = time.time()
+    res = processor.run_uproot_job(filelist, 'Events', NanoTestProcessor(), processor.dask_executor, config, chunksize=chunksize)
+    toc = time.time()
 
-print("Dask client:", client)
-print("Events / s / thread:", res[1]['entries'].value / res[1]['processtime'].value)
-print("Bytes / s / thread:", res[1]['bytesread'].value / res[1]['processtime'].value)
-print("Events / s:", res[1]['entries'].value / (toc - tic))
-print("Bytes / s:", res[1]['bytesread'].value / (toc - tic))
+    print("Dask client:", client)
+    print("Total time: %.0f" % (toc - tic))
+    print("Events / s / thread: {:,.0f}".format(res[1]['entries'].value / res[1]['processtime'].value))
+    print("Bytes / s / thread: {:,.0f}".format(res[1]['bytesread'].value / res[1]['processtime'].value))
+    print("Events / s: {:,.0f}".format(res[1]['entries'].value / (toc - tic)))
+    print("Bytes / s: {:,.0f}".format(res[1]['bytesread'].value / (toc - tic)))
