@@ -36,6 +36,8 @@ class WorkerJumpAssignment(SchedulerPlugin):
 
 
 class ConfigureXRootD(WorkerPlugin):
+    name = 'user_proxy'
+
     def __init__(self, proxy_file=None):
         '''
         If proxy_file is None, look for it in default location
@@ -78,18 +80,17 @@ class DistributeZipball(WorkerPlugin):
 
 class InstallPackage(WorkerPlugin):
     def __init__(self, name):
-        self._name = name
+        self.name = name
 
     def setup(self, worker):
         import os, sys, subprocess
         installdir = os.path.join(os.path.dirname(worker.local_directory), '.local')
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--prefix', installdir, self._name])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '--prefix', installdir, self.name])
         sitepackages = os.path.join(installdir, 'lib', 'python' + sys.version[:3], 'site-packages')
         if sitepackages not in sys.path:
             sys.path.insert(0, sitepackages)
 
     def teardown(self, worker):
-        # trust that nanny will cleanup worker local directory
         pass
 
 
@@ -97,11 +98,8 @@ client = Client(os.environ['DASK_SCHEDULER'])
 
 # one-time setup
 if True:
-    client.restart()
-    user_proxy = ConfigureXRootD()
-    client.register_worker_plugin(user_proxy, 'user_proxy')
-    client.register_worker_plugin(InstallPackage('https://github.com/nsmith-/boostedhiggs/archive/master.zip'), 'boostedhiggs')
-    client.register_worker_plugin(InstallPackage('https://github.com/dnoonan08/TTGamma_LongExercise/archive/Exercise.zip'), 'ttgamma')
+    client.register_worker_plugin(ConfigureXRootD(), 'user_proxy')
+    client.register_worker_plugin(InstallPackage('https://github.com/nsmith-/boostedhiggs/archive/dev.zip'), 'boostedhiggs')
     # newcoffea = DistributeZipball('/home/ncsmith/coffea/dist/coffea-0.6.23.zip')
     # client.register_worker_plugin(newcoffea, 'coffeaupdate')
     # jump_assignment = WorkerJumpAssignment()
@@ -132,16 +130,6 @@ filelist = {
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/26884FA0-B96A-1745-AA11-597C5168EF5E.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/1C3AC8F7-987B-4D40-B002-767A2C65835B.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/FC56B1DA-20B9-F14A-A2CF-2097B8095BEB.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/E3828699-7905-3142-A0A2-929E60406883.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/F690EE89-E028-C840-8C4B-3A3106316530.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/CFC96CE1-3B0B-3D45-8D85-C73EE0C8DAB3.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/DC937EFE-252C-814B-A4B2-743A368793D8.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/C1F8DBF7-4649-2F43-9E03-2161344D4663.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/C3DC24F1-8416-0240-AC54-D63A9760BF45.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/BB0AF882-527A-D641-91BE-4624222CCB17.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/C1450DF7-55A8-FE4F-B50B-9E844F9E103E.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/B08CCF2F-A193-9640-AAE4-82F75CE2B436.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/B4D431A5-B57B-1D40-89AD-B6CB0C9F05E2.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/AF265BB7-CF6C-8241-8DC2-F13BA8A9AD60.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/AF34E3F0-25B7-6644-B557-1428CF675FDC.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/A5702444-A58D-364F-BF6C-EF28C9C52344.root",
@@ -152,26 +140,6 @@ filelist = {
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/948182F2-9993-C74D-B2EA-1D6E0098AD61.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/8F3EEF08-F61E-4046-B140-B04B87602708.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/8FA629F5-385A-AD4A-BB6F-D0856E633712.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/81FFF806-71B3-CC44-AB43-714DBE4C9319.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/8E443B60-F9E9-5444-B37D-62902E68C0C3.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/7BF6D85F-EE22-D840-A435-8CB817098E86.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/80D5E58B-2B5C-0440-9A1F-B6E2772FD7BD.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/761BC07D-C19C-C841-84E4-2766F1DCB60B.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/7AC63348-51B1-9649-B824-D04898C5BA5B.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/698C3A61-1ADA-0446-A47D-D8192E2B5415.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/6BAFEC1D-F9BD-8C48-8A2C-D00229113414.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/60C68FA7-5C29-2740-8242-E519DA6F5F10.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/6827CFDC-89DC-9147-98F8-B25D649B5857.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/5851642F-9C54-FC4E-A8B0-DEA3A10646E4.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/5AE16A97-FA54-0C45-8EDC-C1AA89D5B054.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/51F7E9BD-25F0-D941-BD9A-7F24FD6B1B04.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/572AD18F-BFA0-174E-9D28-0F75F965C147.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/4989E9FC-CD00-D64C-8527-9AD2FF2546A8.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/49CF353A-3303-ED44-8A65-994191042C99.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/43744293-FC6D-D24E-8BB5-DEB0F975AAF5.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/4966A0E8-CC00-BA4D-AEFF-F37332AC1096.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/3C6B053B-C36F-BA4B-8A44-1BC2C291DC8D.root",
-        "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/425C6243-B617-5347-B015-F0908D757828.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/2A9A7EDE-2249-2C44-AF6D-E44B83E8CBDF.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/3C0F69F9-2D31-6646-A1B0-FE021BE707C8.root",
         "root://cmsxrootd.fnal.gov//store/mc/RunIIAutumn18NanoAODv5/DYJetsToLL_M-50_TuneCP5_13TeV-madgraphMLM-pythia8/NANOAODSIM/Nano1June2019_102X_upgrade2018_realistic_v19-v1/110000/274599AC-1636-3641-B09F-ECA42B8F63A4.root",
@@ -186,12 +154,14 @@ config = {
     #     'chunkbytes': 1024*128,
     #     'limitbytes': 200 * 1024**2
     # },
+    'cachestrategy': 'dask-worker',
+    'worker_affinity': True,
 }
-chunksize = 160000
+chunksize = 100000
 
 if True:
     tic = time.time()
-    res = processor.run_uproot_job(filelist, 'Events', NanoTestProcessor(), processor.dask_executor, config, chunksize=chunksize, maxchunks=1)
+    res = processor.run_uproot_job(filelist, 'Events', NanoTestProcessor(), processor.dask_executor, config, chunksize=chunksize, maxchunks=None)
     toc = time.time()
 
     print("Dask client:", client)
